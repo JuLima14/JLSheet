@@ -40,9 +40,9 @@
 		37636C0323E3A068002FEF76 /* JLSheet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JLSheet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37636C0623E3A068002FEF76 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		37636C0823E3A068002FEF76 /* SheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetViewController.swift; sourceTree = "<group>"; };
-		37636C0D23E3A069002FEF76 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		37636C0D23E3A069002FEF76 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ../Assets.xcassets; sourceTree = "<group>"; };
 		37636C1023E3A069002FEF76 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		37636C1223E3A069002FEF76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		37636C1223E3A069002FEF76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../Info.plist; sourceTree = "<group>"; };
 		37636C1723E3A069002FEF76 /* JLSheetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JLSheetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		37636C1B23E3A069002FEF76 /* JLSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JLSheetTests.swift; sourceTree = "<group>"; };
 		37636C1D23E3A069002FEF76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -105,7 +105,6 @@
 			children = (
 				37636C3923E3A72A002FEF76 /* Sheet */,
 				37636C3423E3A514002FEF76 /* Example */,
-				37636C0623E3A068002FEF76 /* AppDelegate.swift */,
 				37636C0D23E3A069002FEF76 /* Assets.xcassets */,
 				37636C0F23E3A069002FEF76 /* LaunchScreen.storyboard */,
 				37636C1223E3A069002FEF76 /* Info.plist */,
@@ -134,10 +133,12 @@
 		37636C3423E3A514002FEF76 /* Example */ = {
 			isa = PBXGroup;
 			children = (
+				37636C0623E3A068002FEF76 /* AppDelegate.swift */,
 				37636C3523E3A52E002FEF76 /* ExampleViewController.swift */,
 				37636C3723E3A58C002FEF76 /* DummyViewController.swift */,
 			);
-			path = Example;
+			name = Example;
+			path = ../Example;
 			sourceTree = "<group>";
 		};
 		37636C3923E3A72A002FEF76 /* Sheet */ = {
@@ -335,6 +336,7 @@
 				37636C1023E3A069002FEF76 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			path = ..;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -462,7 +464,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = WP8N9ATX22;
-				INFOPLIST_FILE = JLSheet/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -470,7 +472,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.noCompany.JLSheet;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -480,7 +482,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = WP8N9ATX22;
-				INFOPLIST_FILE = JLSheet/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -488,7 +490,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.noCompany.JLSheet;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
