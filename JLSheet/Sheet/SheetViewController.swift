@@ -85,7 +85,7 @@ class SheetViewController: UIViewController {
         
         containerView.addSubview(draggableView)
         containerView.addSubview(contentWrapperView)
-        draggableView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:))))
+        containerView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:))))
         
         contentWrapperView.backgroundColor = viewController.view.backgroundColor
         contentWrapperView.addSubview(viewController.view)
@@ -164,7 +164,7 @@ class SheetViewController: UIViewController {
 extension SheetViewController {
     @objc func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
         let translation = gestureRecognizer.translation(in: draggableView).y
-        let locationOnScreen = gestureRecognizer.location(in: view)
+        let locationOnScreen = draggableView.superview?.convert(draggableView.frame.origin, to: nil).y ?? 0
         
         if gestureRecognizer.state == .ended {
             let bottomPosition = animationContext.bottomConstraint?.constant ?? 0
@@ -195,41 +195,26 @@ extension SheetViewController {
             
         } else if gestureRecognizer.state == .began || gestureRecognizer.state == .changed {
 
-//            if locationOnScreen.y - animationContext.minimumDistanceToTop > 0 {
-            
-                if locationOnScreen.y < animationContext.minimumDistanceToTop {
-                    animationContext.bottomConstraint?.constant += logConstraintValueForYPoisition(translation)
+            if locationOnScreen < animationContext.minimumDistanceToTop {
+                    animationContext.bottomConstraint?.constant += logValueForVerticalTranslation(translation)
                 } else {
                     animationContext.bottomConstraint?.constant += translation
-                }
-//            }
+            }
         }
         
         gestureRecognizer.setTranslation(.zero, in: draggableView)
     }
     
-    func linearConstraintValueForYPosition(_ position : CGFloat) -> CGFloat {
-        return abs(position - containerView.frame.height/2)
-    }
-    
-    func finalConstraintValue() -> CGFloat {
-        let viewHeight = animationContext.initialHeightContainerView
-        let verticalLimit: CGFloat = animationContext.minimumDistanceToTop
-        let result = verticalLimit - viewHeight/2
-        return abs(result)
-    }
-    
-    func logConstraintValueForYPoisition(_ translation : CGFloat) -> CGFloat {
+    func logValueForVerticalTranslation(_ translation : CGFloat) -> CGFloat {
         let sign = getSign(translation)
-        let linearValue = linearConstraintValueForYPosition(abs(translation))
         
-        let result = sign * (50 * log10(linearValue) / finalConstraintValue())
+        let viewHeight: CGFloat = animationContext.initialHeightContainerView
+        let verticalLimit: CGFloat = animationContext.minimumDistanceToTop
+        let newPosition: CGFloat = abs(verticalLimit - viewHeight/2)
         
-        print("--------------------------------------------------")
-        print("translation \(translation)")
-        print("result \(result)")
-        print("constant \(animationContext.bottomConstraint!.constant)")
-        return result
+        let linearPosition: CGFloat = abs(translation - containerView.frame.height/2)
+
+        return log10(linearPosition/newPosition) * sign
     }
     
     func getSign(_ value: CGFloat) -> CGFloat {
