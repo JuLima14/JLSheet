@@ -69,7 +69,7 @@ class SheetViewController: UIViewController {
             self.view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
         }
         
-        determinateInitialValues()
+        calculateInitialValues()
         
         initialAnimation()
     }
@@ -126,7 +126,7 @@ class SheetViewController: UIViewController {
         animationContext.bottomConstraint?.isActive = true
     }
     
-    private func determinateInitialValues() {
+    private func calculateInitialValues() {
         containerView.setNeedsLayout()
         
         let viewHeight = containerView.frame.height
@@ -142,6 +142,7 @@ class SheetViewController: UIViewController {
     }
     
     private func initialAnimation() {
+        // TODO: avoid this change
         animationContext.bottomConstraint?.constant = animationContext.initialHeightContainerView
         view.layoutIfNeeded()
         
