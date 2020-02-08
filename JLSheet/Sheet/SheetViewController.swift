@@ -48,15 +48,6 @@ class SheetViewController: UIViewController {
         viewController = rootViewController
         
         super.init(nibName: nil, bundle: nil)
-        
-        draggableViewObservation = observe(\.containerView.center, options: [.new]) { (_, center) in
-            guard let yPosition = self.containerView.superview?.convert(self.containerView.frame.origin, to: nil).y
-                else { return }
-            
-            let percentageAlpha = self.getAlphaPercentage(yPosition: yPosition)
-                
-            self.view.backgroundColor = UIColor.black.withAlphaComponent(percentageAlpha)
-        }
     }
     
     deinit {
@@ -103,6 +94,7 @@ class SheetViewController: UIViewController {
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         viewController.didMove(toParent: self)
         
+        observePositionInContainer()
     }
     
     private func setupConstraints() {
@@ -169,6 +161,17 @@ class SheetViewController: UIViewController {
         })
         
     }
+    
+    private func observePositionInContainer() {
+        draggableViewObservation = observe(\.containerView.center, options: [.new]) { (_, center) in
+            guard let yPosition = self.containerView.superview?.convert(self.containerView.frame.origin, to: nil).y
+                else { return }
+            
+            let percentageAlpha = self.getAlphaPercentage(yPosition)
+                
+            self.view.backgroundColor = UIColor.black.withAlphaComponent(percentageAlpha)
+        }
+    }
 }
 
 // MARK: Handle Pan Gesture
@@ -230,13 +233,13 @@ extension SheetViewController {
         return value > 0 ? 1 : -1
     }
     
-    private func getAlphaPercentage(yPosition: CGFloat) -> CGFloat {
-        let percentageAlpha = self.getPercentageOfScreen(position: yPosition)
+    private func getAlphaPercentage(_ yPosition: CGFloat) -> CGFloat {
+        let percentageAlpha = self.getPercentageOfScreen(yPosition)
         
         return percentageAlpha > 0.4 ? 0.4 : percentageAlpha
     }
     
-    private func getPercentageOfScreen(position: CGFloat) -> CGFloat {
+    private func getPercentageOfScreen(_ position: CGFloat) -> CGFloat {
         return 1 - (position)/(animationContext.screenSize.height)
     }
 }
