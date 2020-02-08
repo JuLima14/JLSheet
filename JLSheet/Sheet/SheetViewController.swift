@@ -10,15 +10,14 @@ import UIKit
 
 /**
  TODO LIST
- - add blureffect to view
- - add stretching to pan gesture
+ - fix stretching to pan gesture
  */
 
-class SheetViewController: UIViewController {
+@objcMembers class SheetViewController: UIViewController {
     
     private(set) var viewController: UIViewController
     
-    private let containerView: UIView = {
+    dynamic let containerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .clear
@@ -40,6 +39,8 @@ class SheetViewController: UIViewController {
     
     private let animationContext: DraggableAnimationContext
     
+    var draggableViewObservation: NSKeyValueObservation?
+    
     init(rootViewController: UIViewController, animationConfiguration: DraggableAnimationConfiguration = DraggableAnimationConfiguration()) {
         
         animationContext = DraggableAnimationContext(animationConfiguration)
@@ -47,6 +48,19 @@ class SheetViewController: UIViewController {
         viewController = rootViewController
         
         super.init(nibName: nil, bundle: nil)
+        
+        draggableViewObservation = observe(\.containerView.center, options: [.new]) { (_, center) in
+            guard let yPosition = self.containerView.superview?.convert(self.containerView.frame.origin, to: nil).y
+                else { return }
+            
+            let percentageAlpha = self.getAlphaPercentage(yPosition: yPosition)
+                
+            self.view.backgroundColor = UIColor.black.withAlphaComponent(percentageAlpha)
+        }
+    }
+    
+    deinit {
+        draggableViewObservation?.invalidate()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -64,10 +78,6 @@ class SheetViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        UIView.animate(withDuration: 0.2) {
-            self.view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
-        }
         
         calculateInitialValues()
         
@@ -92,6 +102,7 @@ class SheetViewController: UIViewController {
         
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         viewController.didMove(toParent: self)
+        
     }
     
     private func setupConstraints() {
@@ -191,12 +202,9 @@ extension SheetViewController {
                             self.dismiss(animated: false)
                     }
                 }
-            
-            
-            
         } else if gestureRecognizer.state == .began || gestureRecognizer.state == .changed {
 
-            if locationOnScreen < animationContext.minimumDistanceToTop {
+            if locationOnScreen < animationContext.minimumDistanceToTop && translation < 0 {
                     animationContext.bottomConstraint?.constant += logValueForVerticalTranslation(translation)
                 } else {
                     animationContext.bottomConstraint?.constant += translation
@@ -206,7 +214,7 @@ extension SheetViewController {
         gestureRecognizer.setTranslation(.zero, in: draggableView)
     }
     
-    func logValueForVerticalTranslation(_ translation : CGFloat) -> CGFloat {
+    private func logValueForVerticalTranslation(_ translation : CGFloat) -> CGFloat {
         let sign = getSign(translation)
         
         let viewHeight: CGFloat = animationContext.initialHeightContainerView
@@ -218,8 +226,18 @@ extension SheetViewController {
         return log10(linearPosition/newPosition) * sign
     }
     
-    func getSign(_ value: CGFloat) -> CGFloat {
+    private func getSign(_ value: CGFloat) -> CGFloat {
         return value > 0 ? 1 : -1
+    }
+    
+    private func getAlphaPercentage(yPosition: CGFloat) -> CGFloat {
+        let percentageAlpha = self.getPercentageOfScreen(position: yPosition)
+        
+        return percentageAlpha > 0.4 ? 0.4 : percentageAlpha
+    }
+    
+    private func getPercentageOfScreen(position: CGFloat) -> CGFloat {
+        return 1 - (position)/(animationContext.screenSize.height)
     }
 }
 
@@ -260,6 +278,8 @@ private class DraggableAnimationContext {
     let screenSize: CGSize = UIScreen.main.bounds.size
     
     let collapseThreshold: CGFloat
+    
+    let backgroundViewAlpha: CGFloat = 0.0
     
     init(_ configuration: DraggableAnimationConfiguration) {
         self.minimumDistanceToTop = configuration.minimumDistanceToTop
