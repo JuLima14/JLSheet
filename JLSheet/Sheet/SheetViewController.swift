@@ -13,11 +13,11 @@ import UIKit
  - fix stretching to pan gesture
  */
 
-@objcMembers class SheetViewController: UIViewController {
+class SheetViewController: UIViewController {
     
     private(set) var viewController: UIViewController
     
-    dynamic let containerView: UIView = {
+    @objc dynamic private let containerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .clear
