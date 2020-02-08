@@ -282,8 +282,6 @@ private class DraggableAnimationContext {
     
     let collapseThreshold: CGFloat
     
-    let backgroundViewAlpha: CGFloat = 0.0
-    
     init(_ configuration: DraggableAnimationConfiguration) {
         self.minimumDistanceToTop = configuration.minimumDistanceToTop
         self.collapseThreshold = configuration.collapseThreshold
