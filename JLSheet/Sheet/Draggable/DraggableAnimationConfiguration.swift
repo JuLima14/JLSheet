@@ -13,7 +13,7 @@ public class DraggableAnimationConfiguration {
     let minimumDistanceToTop: CGFloat
     let collapseThreshold: CGFloat
     
-    init(minimumDistanceToTop: CGFloat = 50, collapseThreshold: CGFloat = 0.2) {
+    init(minimumDistanceToTop: CGFloat = 100, collapseThreshold: CGFloat = 0.2) {
         self.minimumDistanceToTop = minimumDistanceToTop
         self.collapseThreshold = collapseThreshold
     }

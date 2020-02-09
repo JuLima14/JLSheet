@@ -10,15 +10,14 @@ import UIKit
 
 /**
  TODO LIST
- - add blureffect to view
- - add stretching to pan gesture
+ - fix stretching to pan gesture
  */
 
 class SheetViewController: UIViewController {
     
     private(set) var viewController: UIViewController
     
-    private let containerView: UIView = {
+    @objc dynamic private let containerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .clear
@@ -40,6 +39,8 @@ class SheetViewController: UIViewController {
     
     private let animationContext: DraggableAnimationContext
     
+    var draggableViewObservation: NSKeyValueObservation?
+    
     init(rootViewController: UIViewController, animationConfiguration: DraggableAnimationConfiguration = DraggableAnimationConfiguration()) {
         
         animationContext = DraggableAnimationContext(animationConfiguration)
@@ -47,6 +48,10 @@ class SheetViewController: UIViewController {
         viewController = rootViewController
         
         super.init(nibName: nil, bundle: nil)
+    }
+    
+    deinit {
+        draggableViewObservation?.invalidate()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -65,11 +70,7 @@ class SheetViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        UIView.animate(withDuration: 0.2) {
-            self.view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
-        }
-        
-        determinateInitialValues()
+        calculateInitialValues()
         
         initialAnimation()
     }
@@ -85,13 +86,15 @@ class SheetViewController: UIViewController {
         
         containerView.addSubview(draggableView)
         containerView.addSubview(contentWrapperView)
-        draggableView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:))))
+        containerView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:))))
         
         contentWrapperView.backgroundColor = viewController.view.backgroundColor
         contentWrapperView.addSubview(viewController.view)
         
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         viewController.didMove(toParent: self)
+        
+        observePositionInContainer()
     }
     
     private func setupConstraints() {
@@ -126,7 +129,7 @@ class SheetViewController: UIViewController {
         animationContext.bottomConstraint?.isActive = true
     }
     
-    private func determinateInitialValues() {
+    private func calculateInitialValues() {
         containerView.setNeedsLayout()
         
         let viewHeight = containerView.frame.height
@@ -142,6 +145,7 @@ class SheetViewController: UIViewController {
     }
     
     private func initialAnimation() {
+        // TODO: avoid this change
         animationContext.bottomConstraint?.constant = animationContext.initialHeightContainerView
         view.layoutIfNeeded()
         
@@ -157,23 +161,33 @@ class SheetViewController: UIViewController {
         })
         
     }
+    
+    private func observePositionInContainer() {
+        draggableViewObservation = observe(\.containerView.center, options: [.new]) { (_, center) in
+            guard let yPosition = self.containerView.superview?.convert(self.containerView.frame.origin, to: nil).y
+                else { return }
+            
+            let percentageAlpha = self.getAlphaPercentage(yPosition)
+                
+            self.view.backgroundColor = UIColor.black.withAlphaComponent(percentageAlpha)
+        }
+    }
 }
 
 // MARK: Handle Pan Gesture
 
 extension SheetViewController {
     @objc func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
-        let translation = gestureRecognizer.translation(in: draggableView)
-        let locationOnScreen = gestureRecognizer.location(in: view)
+        let translation = gestureRecognizer.translation(in: draggableView).y
+        let locationOnScreen = draggableView.superview?.convert(draggableView.frame.origin, to: nil).y ?? 0
         
         if gestureRecognizer.state == .ended {
-            
             let bottomPosition = animationContext.bottomConstraint?.constant ?? 0
             var shouldDismiss = false
             
             // dismiss case
             if bottomPosition > animationContext.collapseThreshold * animationContext.initialHeightContainerView {
-                animationContext.bottomConstraint?.constant = animationContext.initialHeightContainerView
+                animationContext.bottomConstraint?.constant += animationContext.initialHeightContainerView
                 shouldDismiss = true
             } else { // return case
                 animationContext.bottomConstraint?.constant = 0
@@ -191,22 +205,46 @@ extension SheetViewController {
                             self.dismiss(animated: false)
                     }
                 }
-            
-            
-            
         } else if gestureRecognizer.state == .began || gestureRecognizer.state == .changed {
 
-            if locationOnScreen.y - animationContext.minimumDistanceToTop > 0 {
-                animationContext.bottomConstraint?.constant += translation.y
+            if locationOnScreen < animationContext.minimumDistanceToTop && translation < 0 {
+                    animationContext.bottomConstraint?.constant += logValueForVerticalTranslation(translation)
+                } else {
+                    animationContext.bottomConstraint?.constant += translation
             }
         }
         
         gestureRecognizer.setTranslation(.zero, in: draggableView)
     }
+    
+    private func logValueForVerticalTranslation(_ translation : CGFloat) -> CGFloat {
+        let sign = getSign(translation)
+        
+        let viewHeight: CGFloat = animationContext.initialHeightContainerView
+        let verticalLimit: CGFloat = animationContext.minimumDistanceToTop
+        let newPosition: CGFloat = abs(verticalLimit - viewHeight/2)
+        
+        let linearPosition: CGFloat = abs(translation - containerView.frame.height/2)
+
+        return log10(linearPosition/newPosition) * sign
+    }
+    
+    private func getSign(_ value: CGFloat) -> CGFloat {
+        return value > 0 ? 1 : -1
+    }
+    
+    private func getAlphaPercentage(_ yPosition: CGFloat) -> CGFloat {
+        let percentageAlpha = self.getPercentageOfScreen(yPosition)
+        
+        return percentageAlpha > 0.4 ? 0.4 : percentageAlpha
+    }
+    
+    private func getPercentageOfScreen(_ position: CGFloat) -> CGFloat {
+        return 1 - (position)/(animationContext.screenSize.height)
+    }
 }
 
 private class DraggableAnimationContext {
-    
     let minimumDistanceToTop: CGFloat
     
     var initialHeightContainerView: CGFloat {
