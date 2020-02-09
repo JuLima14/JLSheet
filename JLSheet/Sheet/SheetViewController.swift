@@ -87,6 +87,7 @@ class SheetViewController: UIViewController {
         containerView.addSubview(draggableView)
         containerView.addSubview(contentWrapperView)
         containerView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:))))
+        containerView.alpha = 0
         
         contentWrapperView.backgroundColor = viewController.view.backgroundColor
         contentWrapperView.addSubview(viewController.view)
@@ -124,8 +125,7 @@ class SheetViewController: UIViewController {
             viewController.view.rightAnchor.constraint(equalTo: contentWrapperView.rightAnchor),
         ])
         
-        // al mover la constraint del bottom del viewcontroller no se esta escondiendo la draggableView
-        animationContext.bottomConstraint = viewController.view.bottomAnchor.constraint(lessThanOrEqualTo: contentWrapperView.bottomAnchor)
+        animationContext.bottomConstraint = viewController.view.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor)
         animationContext.bottomConstraint?.isActive = true
     }
     
@@ -145,9 +145,10 @@ class SheetViewController: UIViewController {
     }
     
     private func initialAnimation() {
-        // TODO: avoid this change
         animationContext.bottomConstraint?.constant = animationContext.initialHeightContainerView
-        view.layoutIfNeeded()
+        
+        containerView.layoutIfNeeded()
+        containerView.alpha = 1
         
         animationContext.bottomConstraint?.constant = 0
         
@@ -187,22 +188,18 @@ extension SheetViewController {
             
             // dismiss case
             if bottomPosition > animationContext.collapseThreshold * animationContext.initialHeightContainerView {
-                animationContext.bottomConstraint?.constant += animationContext.initialHeightContainerView
+                animationContext.bottomConstraint?.constant = animationContext.initialHeightContainerView
                 shouldDismiss = true
             } else { // return case
                 animationContext.bottomConstraint?.constant = 0
             }
             
             UIView.animate(withDuration: 0.4,
-                           delay: 0,
-                           usingSpringWithDamping: 0.8,
-                           initialSpringVelocity: 1.0,
-                           options: [.curveEaseInOut, .allowUserInteraction],
                            animations: {
                             self.view.layoutIfNeeded()
             }) { _ in
                     if shouldDismiss {
-                            self.dismiss(animated: false)
+                        self.dismiss(animated: false, completion: nil)
                     }
                 }
         } else if gestureRecognizer.state == .began || gestureRecognizer.state == .changed {
@@ -244,6 +241,8 @@ extension SheetViewController {
         return 1 - (position)/(animationContext.screenSize.height)
     }
 }
+
+// MARK: DraggableAnimationContext
 
 private class DraggableAnimationContext {
     let minimumDistanceToTop: CGFloat

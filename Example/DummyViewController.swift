@@ -58,7 +58,11 @@ class DummyViewController: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        print("dissapear animated: \(animated)")
+        print("will dissapear animated: \(animated)")
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        print("did dissapear animated: \(animated)")
     }
 
 }
