@@ -217,16 +217,17 @@ extension SheetViewController {
         gestureRecognizer.setTranslation(.zero, in: draggableView)
     }
     
-    private func logValueForVerticalTranslation(_ translation : CGFloat) -> CGFloat {
+    private func logValueForVerticalTranslation(_ translation: CGFloat) -> CGFloat {
         let sign = getSign(translation)
         
-        let viewHeight: CGFloat = animationContext.initialHeightContainerView
+        let initialContainerHeight: CGFloat = animationContext.initialHeightContainerView
         let verticalLimit: CGFloat = animationContext.minimumDistanceToTop
-        let newPosition: CGFloat = abs(verticalLimit - viewHeight/2)
+        let actualContainerHeight: CGFloat = containerView.frame.height
         
-        let linearPosition: CGFloat = abs(translation - containerView.frame.height/2)
+        let startHeight: CGFloat = abs(verticalLimit - initialContainerHeight/2)
+        let newHeight: CGFloat = abs(translation - actualContainerHeight/2)
 
-        return log10(linearPosition/newPosition) * sign
+        return log10( 1 + startHeight/newHeight ) * sign
     }
     
     private func getSign(_ value: CGFloat) -> CGFloat {
