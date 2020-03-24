@@ -8,127 +8,142 @@
 
 import UIKit
 
-/**
- TODO LIST
- - fix stretching to pan gesture
- */
-
-class SheetViewController: UIViewController {
-    
+public class SheetViewController: UIViewController {
     private(set) var viewController: UIViewController
-    
-    @objc dynamic private let containerView: UIView = {
+
+    @objc private dynamic let containerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .clear
         return view
     }()
-    
-    private let draggableView: UIView = {
-        let view = DraggableView(frame: .zero)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private let contentWrapperView: UIView = {
-       let view = UIView(frame: .zero)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor.white
-        return view
-    }()
-    
+
+    private let draggableView: DraggableView = .init(frame: .zero)
+
+    private let contentWrapperView: ContentWrapperView = .init(frame: .zero)
+
+    private let headerGradientView: GradientView = .init()
+
     private let animationContext: DraggableAnimationContext
-    
-    var draggableViewObservation: NSKeyValueObservation?
-    
-    init(rootViewController: UIViewController, animationConfiguration: DraggableAnimationConfiguration = DraggableAnimationConfiguration()) {
-        
+
+    private var centerContainerViewObservation: NSKeyValueObservation?
+    private var contentSizeContentScrollViewObservation: NSKeyValueObservation?
+
+    init(rootViewController: UIViewController, animationConfiguration: DraggableAnimationConfiguration = .init()) {
         animationContext = DraggableAnimationContext(animationConfiguration)
-        
+
         viewController = rootViewController
-        
+
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     deinit {
-        draggableViewObservation?.invalidate()
+        removeObservers()
     }
-    
-    required init?(coder aDecoder: NSCoder) {
+
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // MARK: ViewControler Lifecycle
-    
-    override func viewDidLoad() {
+
+    // MARK: ViewController Lifecycle
+
+    override public func viewDidLoad() {
         super.viewDidLoad()
-        
+
         setup()
         setupConstraints()
     }
-    
-    override func viewDidAppear(_ animated: Bool) {
+
+    override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+
         calculateInitialValues()
-        
+
         initialAnimation()
     }
-    
+
+    override public func viewWillDisappear(_ animated: Bool) {
+        view.backgroundColor = UIColor.black.withAlphaComponent(0)
+
+        super.viewWillDisappear(animated)
+    }
+
     // MARK: The initial setup
 
     private func setup() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapToDismiss))
+        tapGesture.delegate = self
+        view.addGestureRecognizer(tapGesture)
+        view.isUserInteractionEnabled = true
         view.backgroundColor = UIColor.clear
-        
+
         addChild(viewController)
-        
+
         view.addSubview(containerView)
-        
+
         containerView.addSubview(draggableView)
         containerView.addSubview(contentWrapperView)
-        containerView.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:))))
+        containerView.addSubview(headerGradientView)
+
+        let panGestureContainerView = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        containerView.addGestureRecognizer(panGestureContainerView)
+        animationContext.containerViewPanGesture = panGestureContainerView
+        containerView.backgroundColor = viewController.view.backgroundColor
         
-        contentWrapperView.backgroundColor = viewController.view.backgroundColor
-        contentWrapperView.addSubview(viewController.view)
+        contentWrapperView.setContent(view: viewController.view)
         
-        viewController.view.translatesAutoresizingMaskIntoConstraints = false
         viewController.didMove(toParent: self)
-        
-        observePositionInContainer()
+
+        if let childScrollView = loadChildScrollView() {
+            contentWrapperView.updateContentScrollView(contentScrollView: childScrollView)
+        }
+
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(scrollViewHandlePan(_:)))
+        panGesture.delegate = self
+        contentWrapperView.contentScrollView.addGestureRecognizer(panGesture)
+        animationContext.scrollViewPanGesture = panGesture
+
+        addObservers()
+
+        containerView.bringSubviewToFront(headerGradientView)
     }
-    
+
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             draggableView.topAnchor.constraint(lessThanOrEqualTo: containerView.topAnchor),
             draggableView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
             draggableView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
-            draggableView.heightAnchor.constraint(equalToConstant: 20)
+            draggableView.heightAnchor.constraint(equalToConstant: 44),
         ])
-        
+
+        NSLayoutConstraint.activate([
+            headerGradientView.topAnchor.constraint(lessThanOrEqualTo: draggableView.bottomAnchor),
+            headerGradientView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
+            headerGradientView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
+            headerGradientView.heightAnchor.constraint(equalToConstant: 2),
+        ])
+
         NSLayoutConstraint.activate([
             contentWrapperView.topAnchor.constraint(equalTo: draggableView.bottomAnchor),
             contentWrapperView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
             contentWrapperView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
-            contentWrapperView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+            contentWrapperView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
         ])
-        
+
         NSLayoutConstraint.activate([
-            containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             containerView.leftAnchor.constraint(equalTo: view.leftAnchor),
-            containerView.rightAnchor.constraint(equalTo: view.rightAnchor)
+            containerView.rightAnchor.constraint(equalTo: view.rightAnchor),
         ])
+
+        animationContext.heightContainerConstraint = containerView.heightAnchor.constraint(greaterThanOrEqualToConstant: 0)
+        animationContext.heightContainerConstraint?.isActive = true
+
+        animationContext.topConstraint = containerView.topAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
+        animationContext.topConstraint?.isActive = true
         
-        NSLayoutConstraint.activate([
-            viewController.view.topAnchor.constraint(equalTo: contentWrapperView.topAnchor),
-            viewController.view.leftAnchor.constraint(equalTo: contentWrapperView.leftAnchor),
-            viewController.view.rightAnchor.constraint(equalTo: contentWrapperView.rightAnchor),
-        ])
-        
-        // al mover la constraint del bottom del viewcontroller no se esta escondiendo la draggableView
-        animationContext.bottomConstraint = viewController.view.bottomAnchor.constraint(lessThanOrEqualTo: contentWrapperView.bottomAnchor)
-        animationContext.bottomConstraint?.isActive = true
+        animationContext.heightScrollViewConstraint = contentWrapperView.contentScrollView.heightAnchor.constraint(greaterThanOrEqualToConstant: 0)
+        animationContext.heightScrollViewConstraint?.isActive = true
     }
-    
+
     private func calculateInitialValues() {
         containerView.setNeedsLayout()
         
@@ -136,155 +151,235 @@ class SheetViewController: UIViewController {
         let screenHeight = animationContext.screenSize.height
         let spaceToTop = screenHeight - viewHeight
         let minimumDistanceToTop = animationContext.minimumDistanceToTop
-        
+
         let distanceToTop = spaceToTop >= minimumDistanceToTop ? spaceToTop : minimumDistanceToTop
-        
+
         animationContext.initialDistanceToTop = distanceToTop
-        
-        animationContext.initialHeightContainerView = viewHeight
+
+        let maxSize = animationContext.screenSize.height - distanceToTop
+
+        animationContext.initialHeightContainerView = viewHeight >= maxSize ? maxSize : viewHeight
+
+        animationContext.heightContainerConstraint?.constant = animationContext.initialHeightContainerView
     }
-    
+
     private func initialAnimation() {
-        // TODO: avoid this change
-        animationContext.bottomConstraint?.constant = animationContext.initialHeightContainerView
-        view.layoutIfNeeded()
-        
-        animationContext.bottomConstraint?.constant = 0
-        
+        animationContext.topConstraint?.constant = -animationContext.initialHeightContainerView
+
         UIView.animate(withDuration: 0.4,
                        delay: 0,
                        usingSpringWithDamping: 0.8,
                        initialSpringVelocity: 1.0,
                        options: [.curveEaseInOut, .allowUserInteraction],
                        animations: {
-                        self.view.layoutIfNeeded()
+                           self.view.layoutIfNeeded()
         })
-        
     }
-    
-    private func observePositionInContainer() {
-        draggableViewObservation = observe(\.containerView.center, options: [.new]) { (_, center) in
+
+    @objc private func tapToDismiss() {
+        dismissSheet()
+    }
+
+    private func dismissSheet() {
+        animationContext.topConstraint?.constant = 0
+
+        UIView.animate(withDuration: 0.4,
+                       delay: 0,
+                       usingSpringWithDamping: 0.8,
+                       initialSpringVelocity: 1.0,
+                       options: [.curveEaseInOut, .allowUserInteraction],
+                       animations: {
+                           self.view.layoutIfNeeded()
+        }) { _ in
+            self.dismiss(animated: false)
+        }
+    }
+
+    private func returnToOriginSheet() {
+        animationContext.heightContainerConstraint?.constant = animationContext.initialHeightContainerView
+        animationContext.topConstraint?.constant = -animationContext.initialHeightContainerView
+
+        UIView.animate(withDuration: 0.4,
+                       delay: 0,
+                       usingSpringWithDamping: 0.8,
+                       initialSpringVelocity: 1.0,
+                       options: [.curveEaseInOut, .allowUserInteraction],
+                       animations: {
+                           self.view.layoutIfNeeded()
+        }, completion: nil)
+    }
+
+    private func loadChildScrollView() -> UIScrollView? {
+        if let scrollView = viewController.view.subviews.first as? UIScrollView { // First level
+            return scrollView
+        } else if let scrollView = viewController.view.subviews.first?.subviews.first as? UIScrollView { // Second Level
+            return scrollView
+        }
+        
+        return nil
+    }
+
+    override public func viewWillLayoutSubviews() {
+        let path = UIBezierPath(roundedRect: containerView.bounds,
+                                byRoundingCorners: [.topRight, .topLeft],
+                                cornerRadii: CGSize(width: 8, height: 8))
+
+        let maskLayer = CAShapeLayer()
+
+        maskLayer.path = path.cgPath
+        containerView.layer.mask = maskLayer
+    }
+}
+
+// MARK: Observers methods
+
+extension SheetViewController {
+    private func addObservers() {
+        centerContainerViewObservation = containerView.observe(\.center, options: .new) { _, _ in
             guard let yPosition = self.containerView.superview?.convert(self.containerView.frame.origin, to: nil).y
-                else { return }
-            
-            let percentageAlpha = self.getAlphaPercentage(yPosition)
-                
+            else { return }
+
+            let percentageAlpha: CGFloat = self.getAlphaPercentage(yPosition)
+
             self.view.backgroundColor = UIColor.black.withAlphaComponent(percentageAlpha)
         }
+
+        contentSizeContentScrollViewObservation = contentWrapperView.contentScrollView.observe(\.contentSize, options: [.old, .new]) { _, _ in
+                if self.animationContext.lastContentSizeHeight != self.contentWrapperView.contentScrollView.contentSize.height {
+                    let screenSize: CGSize = self.animationContext.screenSize
+                    let screenHeight: CGFloat = screenSize.height
+                    let minimumDistanceToTop: CGFloat = self.animationContext.minimumDistanceToTop
+                    let contentSize: CGFloat = self.contentWrapperView.contentScrollView.contentSize.height
+                    let maxSize: CGFloat = screenHeight - minimumDistanceToTop
+
+                    self.animationContext.heightScrollViewConstraint?.constant = contentSize > maxSize ? maxSize : contentSize
+                }
+                self.animationContext.lastContentSizeHeight = self.contentWrapperView.contentScrollView.contentSize.height
+        }
+    }
+
+    private func removeObservers() {
+        centerContainerViewObservation?.invalidate()
+        contentSizeContentScrollViewObservation?.invalidate()
     }
 }
 
 // MARK: Handle Pan Gesture
 
 extension SheetViewController {
-    @objc func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
-        let translation = gestureRecognizer.translation(in: draggableView).y
-        let locationOnScreen = draggableView.superview?.convert(draggableView.frame.origin, to: nil).y ?? 0
-        
-        if gestureRecognizer.state == .ended {
-            let bottomPosition = animationContext.bottomConstraint?.constant ?? 0
-            var shouldDismiss = false
-            
-            // dismiss case
-            if bottomPosition > animationContext.collapseThreshold * animationContext.initialHeightContainerView {
-                animationContext.bottomConstraint?.constant += animationContext.initialHeightContainerView
-                shouldDismiss = true
-            } else { // return case
-                animationContext.bottomConstraint?.constant = 0
-            }
-            
-            UIView.animate(withDuration: 0.4,
-                           delay: 0,
-                           usingSpringWithDamping: 0.8,
-                           initialSpringVelocity: 1.0,
-                           options: [.curveEaseInOut, .allowUserInteraction],
-                           animations: {
-                            self.view.layoutIfNeeded()
-            }) { _ in
-                    if shouldDismiss {
-                            self.dismiss(animated: false)
-                    }
-                }
-        } else if gestureRecognizer.state == .began || gestureRecognizer.state == .changed {
+    @objc private func scrollViewHandlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
+        let translationInView: CGFloat = gestureRecognizer.translation(in: draggableView).y
+        let isDraggingDown: Bool = translationInView > 0
 
-            if locationOnScreen < animationContext.minimumDistanceToTop && translation < 0 {
-                    animationContext.bottomConstraint?.constant += logValueForVerticalTranslation(translation)
-                } else {
-                    animationContext.bottomConstraint?.constant += translation
-            }
+        if gestureRecognizer.state == .began && isDraggingDown {
+            handlePan(gestureRecognizer)
+        } else if gestureRecognizer.state == .changed || gestureRecognizer.state == .ended {
+            handlePan(gestureRecognizer)
         }
-        
+    }
+
+    @objc private func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
+        let translationInView: CGFloat = gestureRecognizer.translation(in: draggableView).y
+        let locationInView: CGFloat = gestureRecognizer.location(in: containerView).y
+        let velocity: CGFloat = gestureRecognizer.velocity(in: draggableView).y
+        let locationOnScreen: CGFloat = draggableView.superview?.convert(draggableView.frame.origin, to: nil).y ?? 0
+        let isDraggingDown: Bool = translationInView > 0
+        let translation: CGFloat = (isDraggingDown && locationInView < 0.0) ? 0.0 : translationInView
+
+        if gestureRecognizer.state == .ended {
+            didEndDragging(with: velocity)
+            animationContext.lastTranslationInView = 0.0
+        } else if gestureRecognizer.state == .began || gestureRecognizer.state == .changed {
+            didChangeDragging(isDraggingDown: isDraggingDown, translation: translation, locationOnScreen: locationOnScreen)
+            animationContext.lastTranslationInView = translation
+        }
+
         gestureRecognizer.setTranslation(.zero, in: draggableView)
     }
-    
+
+    private func didEndDragging(with velocity: CGFloat) {
+        let lastTranslationInView: CGFloat = animationContext.lastTranslationInView
+        let isDraggingDown: Bool = lastTranslationInView > 0
+        let topPosition: CGFloat = -(animationContext.topConstraint?.constant ?? 0)
+
+        if topPosition < animationContext.collapseThreshold * animationContext.initialHeightContainerView ||
+            ((lastTranslationInView > animationContext.translationDismissThreshold
+                || velocity > animationContext.velocityCollapseThreshold)
+                && isDraggingDown) {
+            dismissSheet()
+        } else {
+            returnToOriginSheet()
+        }
+    }
+
+    private func didChangeDragging(isDraggingDown: Bool, translation: CGFloat, locationOnScreen: CGFloat) {
+        let offsetHeight: CGFloat = 4
+
+        if locationOnScreen < animationContext.minimumDistanceToTop, !isDraggingDown {
+            animationContext.topConstraint?.constant += logValueForVerticalTranslation(translation)
+            animationContext.heightContainerConstraint?.constant -= logValueForVerticalTranslation(translation - offsetHeight)
+        } else {
+            animationContext.topConstraint?.constant += translation
+            animationContext.heightContainerConstraint?.constant -= translation - offsetHeight
+        }
+    }
+
     private func logValueForVerticalTranslation(_ translation: CGFloat) -> CGFloat {
         let sign = getSign(translation)
-        
+
         let initialContainerHeight: CGFloat = animationContext.initialHeightContainerView
         let verticalLimit: CGFloat = animationContext.minimumDistanceToTop
         let actualContainerHeight: CGFloat = containerView.frame.height
-        
-        let startHeight: CGFloat = abs(verticalLimit - initialContainerHeight/2)
-        let newHeight: CGFloat = abs(translation - actualContainerHeight/2)
 
-        return log10( 1 + startHeight/newHeight ) * sign
+        let startHeight: CGFloat = abs(verticalLimit - initialContainerHeight / 2)
+        let newHeight: CGFloat = abs(translation - actualContainerHeight / 2)
+
+        return log10(1 + startHeight / newHeight) * sign
     }
-    
+
     private func getSign(_ value: CGFloat) -> CGFloat {
         return value > 0 ? 1 : -1
     }
-    
+
     private func getAlphaPercentage(_ yPosition: CGFloat) -> CGFloat {
-        let percentageAlpha = self.getPercentageOfScreen(yPosition)
-        
-        return percentageAlpha > 0.4 ? 0.4 : percentageAlpha
+        let percentageAlpha: CGFloat = getPercentageOfScreen(yPosition)
+        return percentageAlpha > 0.6 ? 0.6 : percentageAlpha
     }
-    
+
     private func getPercentageOfScreen(_ position: CGFloat) -> CGFloat {
-        return 1 - (position)/(animationContext.screenSize.height)
+        let initialPosition: CGFloat = animationContext.initialDistanceToTop
+        let newPosition: CGFloat = position < initialPosition ? initialPosition : position
+        return 1 - newPosition / animationContext.screenSize.height
     }
 }
 
-private class DraggableAnimationContext {
-    let minimumDistanceToTop: CGFloat
-    
-    var initialHeightContainerView: CGFloat {
-        set {
-            if _initialHeightContainerView == -1 && newValue > -1 {
-                _initialHeightContainerView = newValue
-            }
+// MARK: Handle Pan Gesture of ScrollView
+
+extension SheetViewController: UIGestureRecognizerDelegate {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if gestureRecognizer === animationContext.scrollViewPanGesture, contentWrapperView.contentScrollView.isAtTop {
+            return true
         }
-        
-        get {
-            return _initialHeightContainerView
+
+        if touch.view == view {
+            return true
         }
+
+        return false
     }
-    
-    private var _initialHeightContainerView: CGFloat = -1
-    
-    var initialDistanceToTop: CGFloat {
-        set {
-            if _initialDistanceToTop == -1 && newValue > -1 {
-                _initialDistanceToTop = newValue
-            }
+
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if let pan = gestureRecognizer as? UIPanGestureRecognizer {
+            let translationInView: CGFloat = pan.translation(in: draggableView).y
+            let isDraggingDown: Bool = translationInView > 0
+
+            return isDraggingDown
         }
-        
-        get{
-            return _initialDistanceToTop
+
+        if gestureRecognizer.view === view {
+            return true
         }
-    }
-    
-    private var _initialDistanceToTop: CGFloat = -1
-    
-    var bottomConstraint: NSLayoutConstraint?
-    
-    // TODO: rethink this var
-    let screenSize: CGSize = UIScreen.main.bounds.size
-    
-    let collapseThreshold: CGFloat
-    
-    init(_ configuration: DraggableAnimationConfiguration) {
-        self.minimumDistanceToTop = configuration.minimumDistanceToTop
-        self.collapseThreshold = configuration.collapseThreshold
+
+        return false
     }
 }

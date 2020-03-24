@@ -14,6 +14,7 @@ class DraggableView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(handleView)
         
