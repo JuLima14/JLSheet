@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		372B9FB72427F23E00658C42 /* UIScrollView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372B9FB62427F23E00658C42 /* UIScrollView+Extension.swift */; };
+		372B9FB92427F64000658C42 /* GradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372B9FB82427F64000658C42 /* GradientView.swift */; };
+		372B9FBB2427F67100658C42 /* DraggableAnimationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372B9FBA2427F67100658C42 /* DraggableAnimationContext.swift */; };
+		372B9FBD242A6A1900658C42 /* ContentWrapperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372B9FBC242A6A1900658C42 /* ContentWrapperView.swift */; };
 		37636C0723E3A068002FEF76 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C0623E3A068002FEF76 /* AppDelegate.swift */; };
 		37636C0923E3A068002FEF76 /* SheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C0823E3A068002FEF76 /* SheetViewController.swift */; };
 		37636C0E23E3A069002FEF76 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37636C0D23E3A069002FEF76 /* Assets.xcassets */; };
@@ -37,6 +41,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		372B9FB62427F23E00658C42 /* UIScrollView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScrollView+Extension.swift"; sourceTree = "<group>"; };
+		372B9FB82427F64000658C42 /* GradientView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientView.swift; sourceTree = "<group>"; };
+		372B9FBA2427F67100658C42 /* DraggableAnimationContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableAnimationContext.swift; sourceTree = "<group>"; };
+		372B9FBC242A6A1900658C42 /* ContentWrapperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentWrapperView.swift; sourceTree = "<group>"; };
 		37636C0323E3A068002FEF76 /* JLSheet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JLSheet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37636C0623E3A068002FEF76 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		37636C0823E3A068002FEF76 /* SheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetViewController.swift; sourceTree = "<group>"; };
@@ -155,6 +163,10 @@
 			children = (
 				37636C3A23E3B921002FEF76 /* DraggableView.swift */,
 				37636C3F23E53498002FEF76 /* DraggableAnimationConfiguration.swift */,
+				372B9FB62427F23E00658C42 /* UIScrollView+Extension.swift */,
+				372B9FB82427F64000658C42 /* GradientView.swift */,
+				372B9FBA2427F67100658C42 /* DraggableAnimationContext.swift */,
+				372B9FBC242A6A1900658C42 /* ContentWrapperView.swift */,
 			);
 			path = Draggable;
 			sourceTree = "<group>";
@@ -289,11 +301,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				372B9FBB2427F67100658C42 /* DraggableAnimationContext.swift in Sources */,
+				372B9FB72427F23E00658C42 /* UIScrollView+Extension.swift in Sources */,
 				37636C4023E53498002FEF76 /* DraggableAnimationConfiguration.swift in Sources */,
 				37636C0923E3A068002FEF76 /* SheetViewController.swift in Sources */,
+				372B9FBD242A6A1900658C42 /* ContentWrapperView.swift in Sources */,
 				37636C0723E3A068002FEF76 /* AppDelegate.swift in Sources */,
 				37636C3623E3A52E002FEF76 /* ExampleViewController.swift in Sources */,
 				37636C3823E3A58C002FEF76 /* DummyViewController.swift in Sources */,
+				372B9FB92427F64000658C42 /* GradientView.swift in Sources */,
 				37636C3B23E3B921002FEF76 /* DraggableView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
