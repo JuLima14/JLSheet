@@ -9,7 +9,11 @@
 import UIKit
 
 public class SheetViewController: UIViewController {
-    private(set) var viewController: UIViewController
+    private(set) var viewControllers: [UIViewController] = []
+    
+    private var visibleViewController: UIViewController? {
+        return viewControllers.last
+    }
 
     @objc private dynamic let containerView: UIView = {
         let view = UIView()
@@ -31,9 +35,11 @@ public class SheetViewController: UIViewController {
     init(rootViewController: UIViewController, animationConfiguration: DraggableAnimationConfiguration = .init()) {
         animationContext = DraggableAnimationContext(animationConfiguration)
 
-        viewController = rootViewController
-
+        viewControllers.append(rootViewController)
+        
         super.init(nibName: nil, bundle: nil)
+        
+        rootViewController.sheetViewController = self
     }
 
     deinit {
@@ -76,7 +82,9 @@ public class SheetViewController: UIViewController {
         view.isUserInteractionEnabled = true
         view.backgroundColor = UIColor.clear
 
-        addChild(viewController)
+        guard let presentedViewController = visibleViewController else { return }
+        
+        addChild(presentedViewController)
 
         view.addSubview(containerView)
 
@@ -87,11 +95,11 @@ public class SheetViewController: UIViewController {
         let panGestureContainerView = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         containerView.addGestureRecognizer(panGestureContainerView)
         animationContext.containerViewPanGesture = panGestureContainerView
-        containerView.backgroundColor = viewController.view.backgroundColor
+        containerView.backgroundColor = presentedViewController.view.backgroundColor
         
-        contentWrapperView.setContent(view: viewController.view)
+        contentWrapperView.setContent(view: presentedViewController.view)
         
-        viewController.didMove(toParent: self)
+        presentedViewController.didMove(toParent: self)
 
         if let childScrollView = loadChildScrollView() {
             contentWrapperView.updateContentScrollView(contentScrollView: childScrollView)
@@ -210,9 +218,9 @@ public class SheetViewController: UIViewController {
     }
 
     private func loadChildScrollView() -> UIScrollView? {
-        if let scrollView = viewController.view.subviews.first as? UIScrollView { // First level
+        if let scrollView = visibleViewController?.view.subviews.first as? UIScrollView { // First level
             return scrollView
-        } else if let scrollView = viewController.view.subviews.first?.subviews.first as? UIScrollView { // Second Level
+        } else if let scrollView = visibleViewController?.view.subviews.first?.subviews.first as? UIScrollView { // Second Level
             return scrollView
         }
         
@@ -381,5 +389,44 @@ extension SheetViewController: UIGestureRecognizerDelegate {
         }
 
         return false
+    }
+}
+
+extension SheetViewController {
+    func pushViewController(_ viewController: UIViewController, animated: Bool) {
+        viewControllers.append(viewController)
+        
+        viewController.sheetViewController = self
+        
+        addChild(viewController)
+        
+        contentWrapperView.setContent(view: viewController.view, animated: animated, completion: {
+            viewController.didMove(toParent: self)
+        })
+    }
+}
+
+public extension UIViewController {
+    private static var _sheetViewController = [String:SheetViewController]()
+    
+    weak var sheetViewController: SheetViewController? {
+        get {
+            return UIViewController._sheetViewController[self.debugDescription]
+        }
+        set(newValue) {
+            UIViewController._sheetViewController[self.debugDescription] = newValue
+        }
+    }
+    
+}
+
+class TransitionCoordinator: NSObject, UINavigationControllerDelegate {
+    
+    func navigationController(_ navigationController: UINavigationController,
+                              animationControllerFor operation: UINavigationController.Operation,
+                              from fromVC: UIViewController,
+                              to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        
+      return nil
     }
 }

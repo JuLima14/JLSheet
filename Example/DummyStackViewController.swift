@@ -32,6 +32,8 @@ class DummyStackViewController: UIViewController {
         
         for _ in 0..<qty {
             let view = UIView(frame: .zero)
+            view.isUserInteractionEnabled = true
+            view.addGestureRecognizer(UITapGestureRecognizer.init(target: self, action: #selector(didTap(_:))))
             view.translatesAutoresizingMaskIntoConstraints = false
             view.heightAnchor.constraint(equalToConstant: 50).isActive = true
             view.widthAnchor.constraint(equalToConstant: UIScreen.main.bounds.width).isActive = true
@@ -49,6 +51,10 @@ class DummyStackViewController: UIViewController {
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
         return stackView
+    }
+    
+    @objc private func didTap(_ gestureRecognizer: UITapGestureRecognizer) {
+        sheetViewController?.pushViewController(DummyStackViewController(), animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {

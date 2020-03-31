@@ -34,22 +34,34 @@ class ContentWrapperView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setContent(view: UIView) {
-        contentView?.removeFromSuperview()
-        
+    func setContent(view: UIView, animated: Bool = false, completion: (()->())? = nil) {
         view.translatesAutoresizingMaskIntoConstraints = false
-        
-        contentView = view
         
         contentScrollView.addSubview(view)
         
+        view.frame = contentScrollView.frame
+        view.center = contentScrollView.center.applying(CGAffineTransform(translationX: bounds.width, y: 0))
         
-        NSLayoutConstraint.activate([
-            view.topAnchor.constraint(equalTo: contentScrollView.topAnchor),
-            view.bottomAnchor.constraint(equalTo: contentScrollView.bottomAnchor),
-            view.leadingAnchor.constraint(equalTo: contentScrollView.leadingAnchor),
-            view.trailingAnchor.constraint(equalTo: contentScrollView.trailingAnchor),
-        ])
+        UIView.animate(withDuration: animated ? 0.3 : 0,
+                       delay: 0,
+                       options: animated ? [.allowUserInteraction] : [],
+                       animations: {
+                        view.center = self.contentScrollView.center
+        }, completion: { _ in
+            completion?()
+            
+            self.contentView?.removeFromSuperview()
+            self.contentView = view
+            
+            NSLayoutConstraint.activate([
+                view.topAnchor.constraint(equalTo: self.contentScrollView.topAnchor),
+                view.bottomAnchor.constraint(equalTo: self.contentScrollView.bottomAnchor),
+                view.leadingAnchor.constraint(equalTo: self.contentScrollView.leadingAnchor),
+                view.trailingAnchor.constraint(equalTo: self.contentScrollView.trailingAnchor),
+            ])
+            
+            self.contentScrollView.setContentOffset(.zero, animated: false)
+        })
     }
     
     func updateContentScrollView(contentScrollView: UIScrollView) {

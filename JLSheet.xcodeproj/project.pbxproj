@@ -18,7 +18,7 @@
 		37636C1C23E3A069002FEF76 /* JLSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C1B23E3A069002FEF76 /* JLSheetTests.swift */; };
 		37636C2723E3A069002FEF76 /* JLSheetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C2623E3A069002FEF76 /* JLSheetUITests.swift */; };
 		37636C3623E3A52E002FEF76 /* ExampleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C3523E3A52E002FEF76 /* ExampleViewController.swift */; };
-		37636C3823E3A58C002FEF76 /* DummyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C3723E3A58C002FEF76 /* DummyViewController.swift */; };
+		37636C3823E3A58C002FEF76 /* DummyStackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C3723E3A58C002FEF76 /* DummyStackViewController.swift */; };
 		37636C3B23E3B921002FEF76 /* DraggableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C3A23E3B921002FEF76 /* DraggableView.swift */; };
 		37636C4023E53498002FEF76 /* DraggableAnimationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37636C3F23E53498002FEF76 /* DraggableAnimationConfiguration.swift */; };
 /* End PBXBuildFile section */
@@ -58,7 +58,7 @@
 		37636C2623E3A069002FEF76 /* JLSheetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JLSheetUITests.swift; sourceTree = "<group>"; };
 		37636C2823E3A069002FEF76 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		37636C3523E3A52E002FEF76 /* ExampleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleViewController.swift; sourceTree = "<group>"; };
-		37636C3723E3A58C002FEF76 /* DummyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyViewController.swift; sourceTree = "<group>"; };
+		37636C3723E3A58C002FEF76 /* DummyStackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyStackViewController.swift; sourceTree = "<group>"; };
 		37636C3A23E3B921002FEF76 /* DraggableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableView.swift; sourceTree = "<group>"; };
 		37636C3F23E53498002FEF76 /* DraggableAnimationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableAnimationConfiguration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -143,7 +143,7 @@
 			children = (
 				37636C0623E3A068002FEF76 /* AppDelegate.swift */,
 				37636C3523E3A52E002FEF76 /* ExampleViewController.swift */,
-				37636C3723E3A58C002FEF76 /* DummyViewController.swift */,
+				37636C3723E3A58C002FEF76 /* DummyStackViewController.swift */,
 			);
 			name = Example;
 			path = ../Example;
@@ -308,7 +308,7 @@
 				372B9FBD242A6A1900658C42 /* ContentWrapperView.swift in Sources */,
 				37636C0723E3A068002FEF76 /* AppDelegate.swift in Sources */,
 				37636C3623E3A52E002FEF76 /* ExampleViewController.swift in Sources */,
-				37636C3823E3A58C002FEF76 /* DummyViewController.swift in Sources */,
+				37636C3823E3A58C002FEF76 /* DummyStackViewController.swift in Sources */,
 				372B9FB92427F64000658C42 /* GradientView.swift in Sources */,
 				37636C3B23E3B921002FEF76 /* DraggableView.swift in Sources */,
 			);

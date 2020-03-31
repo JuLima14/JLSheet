@@ -14,7 +14,7 @@ public class DraggableAnimationConfiguration {
     let velocityCollapseThreshold: CGFloat
     let translationDismissThreshold: CGFloat
     let screenSize: CGSize
-
+    
     init(minimumDistanceToTop: CGFloat = UIScreen.main.bounds.size.height * 0.15,
          collapseThreshold: CGFloat = 0.6,
          velocityCollapseThreshold: CGFloat = 1500,
