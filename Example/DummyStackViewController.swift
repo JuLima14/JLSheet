@@ -8,7 +8,7 @@
 
 import UIKit
 
-class DummyViewController: UIViewController {
+class DummyStackViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,19 +21,22 @@ class DummyViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: view.topAnchor),
-            stackView.leftAnchor.constraint(equalTo: view.leftAnchor),
-            stackView.rightAnchor.constraint(equalTo: view.rightAnchor),
-            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
     }
     
-    private func createDummyRandomListViews(_ qty: Int = 10) -> [UIView] {
+    private func createDummyRandomListViews(_ qty: Int = 50) -> [UIView] {
         var views = [UIView]()
         
         for _ in 0..<qty {
             let view = UIView(frame: .zero)
+            view.isUserInteractionEnabled = true
+            view.addGestureRecognizer(UITapGestureRecognizer.init(target: self, action: #selector(didTap(_:))))
             view.translatesAutoresizingMaskIntoConstraints = false
             view.heightAnchor.constraint(equalToConstant: 50).isActive = true
+            view.widthAnchor.constraint(equalToConstant: UIScreen.main.bounds.width).isActive = true
             view.backgroundColor = UIColor.random
             views.append(view)
         }
@@ -45,8 +48,13 @@ class DummyViewController: UIViewController {
         let stackView = UIStackView(arrangedSubviews: views)
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.alignment = .fill
+        stackView.distribution = .fillEqually
         stackView.axis = .vertical
         return stackView
+    }
+    
+    @objc private func didTap(_ gestureRecognizer: UITapGestureRecognizer) {
+        sheetViewController?.pushViewController(DummyStackViewController(), animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {

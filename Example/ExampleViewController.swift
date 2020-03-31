@@ -40,7 +40,7 @@ class ExampleViewController: UIViewController {
     }
     
     @objc func presentSheet() {
-        let sheet = SheetViewController(rootViewController: DummyViewController())
+        let sheet = SheetViewController(rootViewController: DummyStackViewController())
         sheet.modalPresentationStyle = .overCurrentContext
         UIApplication.shared.windows.first?.rootViewController?.present(sheet, animated: false, completion: nil)
     }
